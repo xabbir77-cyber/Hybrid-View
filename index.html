@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexCloud | Ultra Fast Smart Hub</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        :root {
+            --primary: #8b5cf6;
+            --bg-dark: #0f172a;
+            --card-dark: #1e293b;
+            --text-main: #f8fafc;
+        }
+
+        .light-mode {
+            --bg-dark: #f1f5f9;
+            --card-dark: #ffffff;
+            --text-main: #1e293b;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            transition: background 0.2s ease;
+        }
+
+        /* Ultra Fast Grid Layout */
+        .main-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            height: calc(100vh - 85px);
+            margin-top: 70px;
+            padding: 12px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                overflow-y: auto;
+                height: auto;
+            }
+        }
+
+        .panel {
+            background: var(--card-dark);
+            border-radius: 20px;
+            padding: 20px;
+            overflow-y: auto;
+            position: relative;
+            border: 1px solid rgba(139, 92, 246, 0.1);
+            display: flex;
+            flex-direction: column;
+            will-change: transform; /* Boosts rendering speed */
+        }
+
+        .panel.is-expanded {
+            position: fixed;
+            top: 70px;
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
+            z-index: 50;
+            grid-column: span 3;
+        }
+
+        .panel.is-hidden { display: none; }
+
+        .back-btn {
+            display: none;
+            background: var(--primary);
+            color: white;
+            border-radius: 10px;
+            padding: 6px 14px;
+            font-size: 13px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            width: fit-content;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .is-expanded .back-btn { display: flex; }
+
+        .grid-view {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+        }
+
+        .list-view {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .media-card {
+            background: rgba(139, 92, 246, 0.05);
+            border-radius: 15px;
+            padding: 15px;
+            border: 1px solid rgba(139, 92, 246, 0.1);
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            position: relative;
+        }
+
+        .media-card:active { transform: scale(0.95); }
+
+        .glass-nav {
+            background: var(--card-dark);
+            border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+            opacity: 0.98;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Notebook Fullscreen Editor */
+        #noteEditor {
+            position: fixed;
+            inset: 0;
+            background: var(--card-dark);
+            z-index: 100;
+            display: none;
+            padding: 20px;
+            flex-direction: column;
+        }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+    </style>
+</head>
+<body id="appBody">
+
+    <!-- Header -->
+    <nav class="fixed top-0 left-0 w-full z-50 glass-nav px-6 py-3 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div class="bg-purple-600 p-2 rounded-lg">
+                <i data-lucide="cloud" class="text-white w-5 h-5"></i>
+            </div>
+            <h1 class="text-xl font-bold tracking-tight">NexCloud <span class="text-purple-500">Hub</span></h1>
+        </div>
+
+        <div class="flex items-center gap-3 flex-1 max-w-md mx-4">
+            <div class="relative w-full">
+                <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-slate-400"></i>
+                <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Fast Search..." class="w-full bg-slate-100 dark:bg-slate-800/50 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none border border-transparent focus:border-purple-500">
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-2">
+            <div class="text-[10px] text-green-500 font-bold bg-green-500/10 px-2 py-1 rounded">OFFLINE ACTIVE</div>
+            <button onclick="toggleTheme()" class="p-2 text-purple-500"><i data-lucide="sun" id="themeIcon" class="w-5 h-5"></i></button>
+        </div>
+    </nav>
+
+    <!-- Workspace -->
+    <div id="mainHub" class="main-container">
+        <!-- Gallery -->
+        <div id="gallery-panel" class="panel" onclick="toggleExpand('gallery-panel')">
+            <button class="back-btn" onclick="toggleExpand(null, event)"><i data-lucide="arrow-left" class="w-4 h-4"></i> Hub</button>
+            <h2 class="text-lg font-bold flex items-center gap-3 text-blue-500 mb-5"><i data-lucide="image" class="w-5 h-5"></i> Instant Gallery</h2>
+            <div id="gallery-content" class="grid-view"></div>
+            <button class="absolute bottom-5 right-5 bg-purple-600 p-3 rounded-full shadow-lg" onclick="addFolder('image', event)"><i data-lucide="plus" class="text-white"></i></button>
+        </div>
+
+        <!-- Video -->
+        <div id="video-panel" class="panel" onclick="toggleExpand('video-panel')">
+            <button class="back-btn" onclick="toggleExpand(null, event)"><i data-lucide="arrow-left" class="w-4 h-4"></i> Hub</button>
+            <h2 class="text-lg font-bold flex items-center gap-3 text-red-500 mb-5"><i data-lucide="play-circle" class="w-5 h-5"></i> Quick Video</h2>
+            <div id="video-content" class="grid-view"></div>
+            <button class="absolute bottom-5 right-5 bg-purple-600 p-3 rounded-full shadow-lg" onclick="addFolder('video', event)"><i data-lucide="plus" class="text-white"></i></button>
+        </div>
+
+        <!-- Offline Notebook -->
+        <div id="note-panel" class="panel" onclick="toggleExpand('note-panel')">
+            <button class="back-btn" onclick="toggleExpand(null, event)"><i data-lucide="arrow-left" class="w-4 h-4"></i> Hub</button>
+            <h2 class="text-lg font-bold flex items-center gap-3 text-green-500 mb-5"><i data-lucide="edit-3" class="w-5 h-5"></i> Offline Notes</h2>
+            <div id="note-content" class="grid-view"></div>
+            <button class="absolute bottom-5 right-5 bg-purple-600 p-3 rounded-full shadow-lg" onclick="addFolder('note', event)"><i data-lucide="plus" class="text-white"></i></button>
+        </div>
+    </div>
+
+    <!-- Notebook Editor -->
+    <div id="noteEditor">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold" id="editNoteTitle">Edit Note</h3>
+            <button onclick="closeNoteEditor()" class="bg-purple-600 px-6 py-2 rounded-xl text-white font-bold">Save & Close</button>
+        </div>
+        <textarea id="noteTextarea" class="flex-1 bg-slate-100 dark:bg-slate-800 p-4 rounded-2xl outline-none resize-none text-lg border-2 border-transparent focus:border-purple-500" placeholder="Type your note here..."></textarea>
+    </div>
+
+    <script>
+        // High Speed State
+        let appData = JSON.parse(localStorage.getItem('nex_hub_v7')) || {
+            image: [],
+            video: [],
+            note: [],
+            viewMode: 'grid',
+            theme: 'dark'
+        };
+
+        let currentEditingNote = null;
+        let searchQuery = "";
+
+        // Fast Save
+        function save() { 
+            localStorage.setItem('nex_hub_v7', JSON.stringify(appData));
+        }
+
+        // Instant Render Logic
+        function renderAll() {
+            renderSection('image', 'gallery-content', 'folder', 'text-blue-500');
+            renderSection('video', 'video-content', 'play', 'text-red-500');
+            renderSection('note', 'note-content', 'file-text', 'text-green-500');
+            lucide.createIcons();
+        }
+
+        function renderSection(type, containerId, icon, color) {
+            const container = document.getElementById(containerId);
+            const filtered = appData[type].filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+            container.innerHTML = filtered.map(f => `
+                <div class="media-card group" onclick="openItem('${type}', ${f.id}, event)">
+                    <div class="flex flex-col items-center text-center gap-2">
+                        <i data-lucide="${f.password ? 'lock' : icon}" class="${color} w-12 h-12"></i>
+                        <span class="text-sm font-semibold truncate w-full px-2">${f.name}</span>
+                        <div class="flex gap-2 opacity-0 group-hover:opacity-100 mt-2">
+                            <button onclick="toggleLock('${type}', ${f.id}, event)" class="p-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg"><i data-lucide="lock" class="w-3 h-3"></i></button>
+                            <button onclick="deleteItem('${type}', ${f.id}, event)" class="p-1.5 bg-red-500/20 rounded-lg"><i data-lucide="trash" class="w-3 h-3 text-red-500"></i></button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Instant Expand
+        function toggleExpand(panelId, event) {
+            if(event) event.stopPropagation();
+            const panels = document.querySelectorAll('.panel');
+            if(!panelId) {
+                panels.forEach(p => p.classList.remove('is-expanded', 'is-hidden'));
+                return;
+            }
+            panels.forEach(p => {
+                if(p.id === panelId) { p.classList.add('is-expanded'); p.classList.remove('is-hidden'); }
+                else { p.classList.add('is-hidden'); }
+            });
+        }
+
+        // Fast Note System (Offline)
+        function openItem(type, id, e) {
+            const f = appData[type].find(x => x.id === id);
+            
+            if(f.password) {
+                const p = prompt("Password:");
+                if(p !== f.password) return alert("Wrong!");
+            }
+
+            if(type === 'note') {
+                currentEditingNote = f;
+                document.getElementById('editNoteTitle').innerText = f.name;
+                document.getElementById('noteTextarea').value = f.content || "";
+                document.getElementById('noteEditor').style.display = 'flex';
+            } else {
+                alert(`Opening ${f.name} instantly (No Loading Time)`);
+            }
+        }
+
+        function closeNoteEditor() {
+            if(currentEditingNote) {
+                currentEditingNote.content = document.getElementById('noteTextarea').value;
+                save();
+                renderAll();
+            }
+            document.getElementById('noteEditor').style.display = 'none';
+        }
+
+        function addFolder(type, e) {
+            e.stopPropagation();
+            const n = prompt(`New ${type.toUpperCase()} Name?`);
+            if(n) {
+                appData[type].push({ id: Date.now(), name: n, password: null, content: "" });
+                save(); renderAll();
+            }
+        }
+
+        function deleteItem(type, id, e) {
+            e.stopPropagation();
+            appData[type] = appData[type].filter(x => x.id !== id);
+            save(); renderAll();
+        }
+
+        function toggleLock(type, id, e) {
+            e.stopPropagation();
+            const f = appData[type].find(x => x.id === id);
+            if(f.password) f.password = null;
+            else f.password = prompt("Set Password:");
+            save(); renderAll();
+        }
+
+        function handleSearch() {
+            searchQuery = document.getElementById('searchInput').value;
+            renderAll();
+        }
+
+        function toggleTheme() {
+            appData.theme = appData.theme === 'dark' ? 'light' : 'dark';
+            applyTheme();
+            save();
+        }
+
+        function applyTheme() {
+            const body = document.getElementById('appBody');
+            if(appData.theme === 'light') body.classList.add('light-mode');
+            else body.classList.remove('light-mode');
+            lucide.createIcons();
+        }
+
+        applyTheme();
+        renderAll();
+    </script>
+</body>
+</html>
