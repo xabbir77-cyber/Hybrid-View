@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NexCloud | Ultra Fast Smart Hub</title>
+    <title>Hybrid View | Ultra Fast Smart Hub</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -26,18 +26,18 @@
             background-color: var(--bg-dark);
             color: var(--text-main);
             font-family: 'Inter', sans-serif;
-            overflow: hidden;
-            transition: background 0.2s ease;
+            overflow-x: hidden;
+            transition: background 0.3s ease;
         }
 
-        /* Ultra Fast Grid Layout */
+        /* Responsive Grid Layout */
         .main-container {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            height: calc(100vh - 85px);
-            margin-top: 70px;
-            padding: 12px;
+            gap: 15px;
+            height: calc(100vh - 90px);
+            margin-top: 75px;
+            padding: 15px;
         }
 
         @media (max-width: 1024px) {
@@ -50,22 +50,22 @@
 
         .panel {
             background: var(--card-dark);
-            border-radius: 20px;
-            padding: 20px;
+            border-radius: 24px;
+            padding: 24px;
             overflow-y: auto;
             position: relative;
             border: 1px solid rgba(139, 92, 246, 0.1);
             display: flex;
             flex-direction: column;
-            will-change: transform; /* Boosts rendering speed */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
 
         .panel.is-expanded {
             position: fixed;
-            top: 70px;
-            left: 12px;
-            right: 12px;
-            bottom: 12px;
+            top: 75px;
+            left: 15px;
+            right: 15px;
+            bottom: 15px;
             z-index: 50;
             grid-column: span 3;
         }
@@ -76,85 +76,95 @@
             display: none;
             background: var(--primary);
             color: white;
-            border-radius: 10px;
-            padding: 6px 14px;
-            font-size: 13px;
-            margin-bottom: 15px;
+            border-radius: 12px;
+            padding: 8px 16px;
+            font-size: 14px;
+            margin-bottom: 20px;
             cursor: pointer;
             width: fit-content;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            font-weight: 600;
         }
 
         .is-expanded .back-btn { display: flex; }
 
         .grid-view {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
             gap: 15px;
         }
 
-        .list-view {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
         .media-card {
-            background: rgba(139, 92, 246, 0.05);
-            border-radius: 15px;
-            padding: 15px;
-            border: 1px solid rgba(139, 92, 246, 0.1);
+            background: rgba(139, 92, 246, 0.04);
+            border-radius: 18px;
+            padding: 12px;
+            border: 1px solid rgba(139, 92, 246, 0.08);
             cursor: pointer;
-            transition: transform 0.1s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
         }
 
-        .media-card:active { transform: scale(0.95); }
+        .media-card:hover {
+            transform: translateY(-2px);
+            background: rgba(139, 92, 246, 0.08);
+            border-color: var(--primary);
+        }
+
+        .media-card:active { transform: scale(0.96); }
 
         .glass-nav {
             background: var(--card-dark);
-            border-bottom: 1px solid rgba(139, 92, 246, 0.2);
-            opacity: 0.98;
-            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
 
-        /* Notebook Fullscreen Editor */
+        /* Note Fullscreen Editor */
         #noteEditor {
             position: fixed;
             inset: 0;
             background: var(--card-dark);
             z-index: 100;
             display: none;
-            padding: 20px;
+            padding: 30px;
             flex-direction: column;
         }
 
-        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
     </style>
 </head>
 <body id="appBody">
 
+    <!-- Hidden File Inputs for Storage -->
+    <input type="file" id="imageUploader" accept="image/*" class="hidden" onchange="handleFileUpload('image', event)">
+    <input type="file" id="videoUploader" accept="video/*" class="hidden" onchange="handleFileUpload('video', event)">
+
     <!-- Header -->
     <nav class="fixed top-0 left-0 w-full z-50 glass-nav px-6 py-3 flex justify-between items-center">
         <div class="flex items-center gap-3">
-            <div class="bg-purple-600 p-2 rounded-lg">
-                <i data-lucide="cloud" class="text-white w-5 h-5"></i>
+            <div class="bg-purple-600 p-2.5 rounded-xl shadow-lg shadow-purple-500/20">
+                <i data-lucide="layers" class="text-white w-5 h-5"></i>
             </div>
-            <h1 class="text-xl font-bold tracking-tight">NexCloud <span class="text-purple-500">Hub</span></h1>
+            <h1 class="text-xl font-black tracking-tight">Hybrid <span class="text-purple-500">View</span></h1>
         </div>
 
         <div class="flex items-center gap-3 flex-1 max-w-md mx-4">
             <div class="relative w-full">
-                <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-slate-400"></i>
-                <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Fast Search..." class="w-full bg-slate-100 dark:bg-slate-800/50 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none border border-transparent focus:border-purple-500">
+                <i data-lucide="search" class="absolute left-3.5 top-3 w-4 h-4 text-slate-400"></i>
+                <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Search anything..." class="w-full bg-slate-100 dark:bg-slate-800/60 rounded-xl py-2.5 pl-11 pr-4 text-sm focus:outline-none border-2 border-transparent focus:border-purple-500/50 transition-all">
             </div>
         </div>
         
-        <div class="flex items-center gap-2">
-            <div class="text-[10px] text-green-500 font-bold bg-green-500/10 px-2 py-1 rounded">OFFLINE ACTIVE</div>
-            <button onclick="toggleTheme()" class="p-2 text-purple-500"><i data-lucide="sun" id="themeIcon" class="w-5 h-5"></i></button>
+        <div class="flex items-center gap-4">
+            <div class="hidden md:flex items-center gap-1.5 text-[10px] text-green-500 font-bold bg-green-500/10 px-3 py-1.5 rounded-full border border-green-500/20">
+                <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                OFFLINE ENGINE
+            </div>
+            <button onclick="toggleTheme()" class="p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-purple-500 hover:scale-110 transition-transform">
+                <i data-lucide="sun" id="themeIcon" class="w-5 h-5"></i>
+            </button>
         </div>
     </nav>
 
@@ -162,60 +172,102 @@
     <div id="mainHub" class="main-container">
         <!-- Gallery -->
         <div id="gallery-panel" class="panel" onclick="toggleExpand('gallery-panel')">
-            <button class="back-btn" onclick="toggleExpand(null, event)"><i data-lucide="arrow-left" class="w-4 h-4"></i> Hub</button>
-            <h2 class="text-lg font-bold flex items-center gap-3 text-blue-500 mb-5"><i data-lucide="image" class="w-5 h-5"></i> Instant Gallery</h2>
+            <button class="back-btn" onclick="toggleExpand(null, event)"><i data-lucide="arrow-left" class="w-4 h-4"></i> Main Hub</button>
+            <h2 class="text-lg font-bold flex items-center gap-3 text-blue-500 mb-6"><i data-lucide="image" class="w-5 h-5"></i> Photo Gallery</h2>
             <div id="gallery-content" class="grid-view"></div>
-            <button class="absolute bottom-5 right-5 bg-purple-600 p-3 rounded-full shadow-lg" onclick="addFolder('image', event)"><i data-lucide="plus" class="text-white"></i></button>
+            <button class="absolute bottom-6 right-6 bg-blue-600 hover:bg-blue-500 p-4 rounded-2xl shadow-xl shadow-blue-500/30 transition-all hover:scale-110" onclick="triggerUpload('image', event)">
+                <i data-lucide="plus" class="text-white w-6 h-6"></i>
+            </button>
         </div>
 
         <!-- Video -->
         <div id="video-panel" class="panel" onclick="toggleExpand('video-panel')">
-            <button class="back-btn" onclick="toggleExpand(null, event)"><i data-lucide="arrow-left" class="w-4 h-4"></i> Hub</button>
-            <h2 class="text-lg font-bold flex items-center gap-3 text-red-500 mb-5"><i data-lucide="play-circle" class="w-5 h-5"></i> Quick Video</h2>
+            <button class="back-btn" onclick="toggleExpand(null, event)"><i data-lucide="arrow-left" class="w-4 h-4"></i> Main Hub</button>
+            <h2 class="text-lg font-bold flex items-center gap-3 text-red-500 mb-6"><i data-lucide="play-circle" class="w-5 h-5"></i> Video Vault</h2>
             <div id="video-content" class="grid-view"></div>
-            <button class="absolute bottom-5 right-5 bg-purple-600 p-3 rounded-full shadow-lg" onclick="addFolder('video', event)"><i data-lucide="plus" class="text-white"></i></button>
+            <button class="absolute bottom-6 right-6 bg-red-600 hover:bg-red-500 p-4 rounded-2xl shadow-xl shadow-red-500/30 transition-all hover:scale-110" onclick="triggerUpload('video', event)">
+                <i data-lucide="plus" class="text-white w-6 h-6"></i>
+            </button>
         </div>
 
         <!-- Offline Notebook -->
         <div id="note-panel" class="panel" onclick="toggleExpand('note-panel')">
-            <button class="back-btn" onclick="toggleExpand(null, event)"><i data-lucide="arrow-left" class="w-4 h-4"></i> Hub</button>
-            <h2 class="text-lg font-bold flex items-center gap-3 text-green-500 mb-5"><i data-lucide="edit-3" class="w-5 h-5"></i> Offline Notes</h2>
+            <button class="back-btn" onclick="toggleExpand(null, event)"><i data-lucide="arrow-left" class="w-4 h-4"></i> Main Hub</button>
+            <h2 class="text-lg font-bold flex items-center gap-3 text-green-500 mb-6"><i data-lucide="file-edit" class="w-5 h-5"></i> Smart Notes</h2>
             <div id="note-content" class="grid-view"></div>
-            <button class="absolute bottom-5 right-5 bg-purple-600 p-3 rounded-full shadow-lg" onclick="addFolder('note', event)"><i data-lucide="plus" class="text-white"></i></button>
+            <button class="absolute bottom-6 right-6 bg-green-600 hover:bg-green-500 p-4 rounded-2xl shadow-xl shadow-green-500/30 transition-all hover:scale-110" onclick="addNote(event)">
+                <i data-lucide="plus" class="text-white w-6 h-6"></i>
+            </button>
         </div>
     </div>
 
     <!-- Notebook Editor -->
     <div id="noteEditor">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold" id="editNoteTitle">Edit Note</h3>
-            <button onclick="closeNoteEditor()" class="bg-purple-600 px-6 py-2 rounded-xl text-white font-bold">Save & Close</button>
+        <div class="max-w-4xl mx-auto w-full flex flex-col h-full">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="edit-3" class="text-purple-500 w-6 h-6"></i>
+                    <h3 class="text-2xl font-bold" id="editNoteTitle">Edit Note</h3>
+                </div>
+                <button onclick="closeNoteEditor()" class="bg-purple-600 hover:bg-purple-500 px-8 py-3 rounded-2xl text-white font-bold shadow-lg shadow-purple-500/20 transition-all">Save & Exit</button>
+            </div>
+            <textarea id="noteTextarea" class="flex-1 bg-slate-100 dark:bg-slate-800/50 p-6 rounded-3xl outline-none resize-none text-xl border-2 border-transparent focus:border-purple-500/30 leading-relaxed" placeholder="Write your thoughts here..."></textarea>
         </div>
-        <textarea id="noteTextarea" class="flex-1 bg-slate-100 dark:bg-slate-800 p-4 rounded-2xl outline-none resize-none text-lg border-2 border-transparent focus:border-purple-500" placeholder="Type your note here..."></textarea>
     </div>
 
     <script>
-        // High Speed State
-        let appData = JSON.parse(localStorage.getItem('nex_hub_v7')) || {
+        // High Speed App State
+        let appData = JSON.parse(localStorage.getItem('hybrid_view_data')) || {
             image: [],
             video: [],
             note: [],
-            viewMode: 'grid',
             theme: 'dark'
         };
 
         let currentEditingNote = null;
         let searchQuery = "";
 
-        // Fast Save
         function save() { 
-            localStorage.setItem('nex_hub_v7', JSON.stringify(appData));
+            localStorage.setItem('hybrid_view_data', JSON.stringify(appData)); 
         }
 
-        // Instant Render Logic
+        // --- Core File Handling ---
+        function triggerUpload(type, e) {
+            e.stopPropagation();
+            document.getElementById(`${type}Uploader`).click();
+        }
+
+        function handleFileUpload(type, event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                appData[type].push({
+                    id: Date.now(),
+                    name: file.name,
+                    src: e.target.result,
+                    password: null
+                });
+                save(); 
+                renderAll();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function addNote(e) {
+            e.stopPropagation();
+            const n = prompt("Note Title?");
+            if(n && n.trim() !== "") {
+                appData.note.push({ id: Date.now(), name: n, content: "", password: null });
+                save(); renderAll();
+            }
+        }
+
+        // --- Fast Render Engine ---
         function renderAll() {
-            renderSection('image', 'gallery-content', 'folder', 'text-blue-500');
-            renderSection('video', 'video-content', 'play', 'text-red-500');
+            renderSection('image', 'gallery-content', 'image', 'text-blue-500');
+            renderSection('video', 'video-content', 'video', 'text-red-500');
             renderSection('note', 'note-content', 'file-text', 'text-green-500');
             lucide.createIcons();
         }
@@ -224,41 +276,42 @@
             const container = document.getElementById(containerId);
             const filtered = appData[type].filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
-            container.innerHTML = filtered.map(f => `
-                <div class="media-card group" onclick="openItem('${type}', ${f.id}, event)">
-                    <div class="flex flex-col items-center text-center gap-2">
-                        <i data-lucide="${f.password ? 'lock' : icon}" class="${color} w-12 h-12"></i>
-                        <span class="text-sm font-semibold truncate w-full px-2">${f.name}</span>
-                        <div class="flex gap-2 opacity-0 group-hover:opacity-100 mt-2">
-                            <button onclick="toggleLock('${type}', ${f.id}, event)" class="p-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg"><i data-lucide="lock" class="w-3 h-3"></i></button>
-                            <button onclick="deleteItem('${type}', ${f.id}, event)" class="p-1.5 bg-red-500/20 rounded-lg"><i data-lucide="trash" class="w-3 h-3 text-red-500"></i></button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // Instant Expand
-        function toggleExpand(panelId, event) {
-            if(event) event.stopPropagation();
-            const panels = document.querySelectorAll('.panel');
-            if(!panelId) {
-                panels.forEach(p => p.classList.remove('is-expanded', 'is-hidden'));
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="col-span-full py-10 text-center opacity-30 text-sm italic">No items found</div>`;
                 return;
             }
-            panels.forEach(p => {
-                if(p.id === panelId) { p.classList.add('is-expanded'); p.classList.remove('is-hidden'); }
-                else { p.classList.add('is-hidden'); }
-            });
+
+            container.innerHTML = filtered.map(f => {
+                let preview = `<i data-lucide="${f.password ? 'lock' : icon}" class="${color} w-10 h-10"></i>`;
+                
+                if (!f.password) {
+                    if (type === 'image') preview = `<img src="${f.src}" class="w-full h-24 object-cover rounded-xl shadow-inner">`;
+                    if (type === 'video') preview = `<div class="relative w-full h-24 bg-black rounded-xl overflow-hidden flex items-center justify-center"><i data-lucide="play" class="absolute text-white w-6 h-6 z-10 drop-shadow-lg"></i><video src="${f.src}" class="w-full h-full object-cover opacity-60"></video></div>`;
+                }
+
+                return `
+                    <div class="media-card group" onclick="openItem('${type}', ${f.id}, event)">
+                        <div class="flex flex-col items-center text-center gap-1">
+                            ${preview}
+                            <span class="text-[10px] font-bold truncate w-full px-1 mt-2 opacity-70">${f.name}</span>
+                            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-all mt-2">
+                                <button onclick="toggleLock('${type}', ${f.id}, event)" class="p-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-purple-500/20 rounded-lg"><i data-lucide="lock" class="w-3 h-3"></i></button>
+                                <button onclick="deleteItem('${type}', ${f.id}, event)" class="p-1.5 bg-red-500/10 hover:bg-red-500 rounded-lg group/del transition-all"><i data-lucide="trash" class="w-3 h-3 text-red-500 group-hover/del:text-white"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
-        // Fast Note System (Offline)
+        // --- Interaction Logic ---
         function openItem(type, id, e) {
+            e.stopPropagation();
             const f = appData[type].find(x => x.id === id);
             
             if(f.password) {
-                const p = prompt("Password:");
-                if(p !== f.password) return alert("Wrong!");
+                const pass = prompt("Enter Security Password:");
+                if(pass !== f.password) return alert("Security Breach: Access Denied!");
             }
 
             if(type === 'note') {
@@ -267,30 +320,44 @@
                 document.getElementById('noteTextarea').value = f.content || "";
                 document.getElementById('noteEditor').style.display = 'flex';
             } else {
-                alert(`Opening ${f.name} instantly (No Loading Time)`);
+                const viewer = window.open();
+                const content = type === 'image' 
+                    ? `<img src="${f.src}" style="max-width:100%; max-height:100vh; object-fit:contain;">` 
+                    : `<video src="${f.src}" controls autoplay style="max-width:100%; max-height:100vh;"></video>`;
+                
+                viewer.document.write(`
+                    <body style="margin:0; background:#000; display:flex; align-items:center; justify-content:center; height:100vh; font-family:sans-serif; color:#fff;">
+                        <div style="position:fixed; top:20px; left:20px; background:rgba(255,255,255,0.1); padding:10px 20px; border-radius:10px; backdrop-filter:blur(10px);">${f.name}</div>
+                        ${content}
+                    </body>
+                `);
             }
         }
 
         function closeNoteEditor() {
             if(currentEditingNote) {
                 currentEditingNote.content = document.getElementById('noteTextarea').value;
-                save();
-                renderAll();
+                save(); renderAll();
             }
             document.getElementById('noteEditor').style.display = 'none';
         }
 
-        function addFolder(type, e) {
-            e.stopPropagation();
-            const n = prompt(`New ${type.toUpperCase()} Name?`);
-            if(n) {
-                appData[type].push({ id: Date.now(), name: n, password: null, content: "" });
-                save(); renderAll();
+        function toggleExpand(panelId, event) {
+            if(event) event.stopPropagation();
+            const panels = document.querySelectorAll('.panel');
+            if(!panelId) {
+                panels.forEach(p => p.classList.remove('is-expanded', 'is-hidden'));
+                return;
             }
+            panels.forEach(p => {
+                if(p.id === panelId) p.classList.add('is-expanded');
+                else p.classList.add('is-hidden');
+            });
         }
 
         function deleteItem(type, id, e) {
             e.stopPropagation();
+            if(!confirm("Are you sure you want to delete this file?")) return;
             appData[type] = appData[type].filter(x => x.id !== id);
             save(); renderAll();
         }
@@ -298,8 +365,12 @@
         function toggleLock(type, id, e) {
             e.stopPropagation();
             const f = appData[type].find(x => x.id === id);
-            if(f.password) f.password = null;
-            else f.password = prompt("Set Password:");
+            if (f.password) {
+                f.password = null;
+            } else {
+                const p = prompt("Set a Security Password for this file:");
+                if(p) f.password = p;
+            }
             save(); renderAll();
         }
 
@@ -310,17 +381,23 @@
 
         function toggleTheme() {
             appData.theme = appData.theme === 'dark' ? 'light' : 'dark';
-            applyTheme();
-            save();
+            applyTheme(); save();
         }
 
         function applyTheme() {
             const body = document.getElementById('appBody');
-            if(appData.theme === 'light') body.classList.add('light-mode');
-            else body.classList.remove('light-mode');
+            const icon = document.getElementById('themeIcon');
+            if(appData.theme === 'light') {
+                body.classList.add('light-mode');
+                icon.setAttribute('data-lucide', 'moon');
+            } else {
+                body.classList.remove('light-mode');
+                icon.setAttribute('data-lucide', 'sun');
+            }
             lucide.createIcons();
         }
 
+        // Start
         applyTheme();
         renderAll();
     </script>
